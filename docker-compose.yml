@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg15
+    container_name: elastic_newsroom_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-elastic_newsroom}
+      POSTGRES_USER: ${POSTGRES_USER:-newsroom_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme_in_production}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-newsroom_user} -d ${POSTGRES_DB:-elastic_newsroom}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - newsroom_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: elastic_newsroom_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - newsroom_network
+
+  identity:
+    build:
+      context: ./services/identity
+      dockerfile: Dockerfile
+    container_name: elastic_newsroom_identity
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-newsroom_user}:${POSTGRES_PASSWORD:-changeme_in_production}@postgres:5432/${POSTGRES_DB:-elastic_newsroom}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=${JWT_ACCESS_TOKEN_EXPIRE_MINUTES:-15}
+      - JWT_REFRESH_TOKEN_EXPIRE_DAYS=${JWT_REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "${IDENTITY_SERVICE_PORT:-8001}:8000"
+    volumes:
+      - ./services/identity/app:/app/app:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - newsroom_network
+
+  discovery:
+    build:
+      context: ./services/discovery
+      dockerfile: Dockerfile
+    container_name: elastic_newsroom_discovery
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-newsroom_user}:${POSTGRES_PASSWORD:-changeme_in_production}@postgres:5432/${POSTGRES_DB:-elastic_newsroom}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "${DISCOVERY_SERVICE_PORT:-8002}:8000"
+    volumes:
+      - ./services/discovery/app:/app/app:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - newsroom_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  newsroom_network:
+    driver: bridge
