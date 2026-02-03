@@ -47,13 +47,36 @@ shell:
 db-shell:
 	docker-compose exec postgres psql -U newsroom_user -d elastic_newsroom
 
-# Run database migrations
+# Run database migrations (all services)
 migrate:
 	docker-compose exec identity alembic upgrade head
+	docker-compose exec pitch alembic upgrade head
+	docker-compose exec payment alembic upgrade head
+	docker-compose exec ml alembic upgrade head
 
-# Run tests
+# Run tests for all services
 test:
 	docker-compose exec identity pytest -v --cov=app --cov-report=term-missing
+	docker-compose exec discovery pytest -v --cov=app --cov-report=term-missing
+	docker-compose exec pitch pytest -v --cov=app --cov-report=term-missing
+	docker-compose exec payment pytest -v --cov=app --cov-report=term-missing
+	docker-compose exec ml pytest -v --cov=app --cov-report=term-missing
+
+# Run tests for a specific service
+test-identity:
+	docker-compose exec identity pytest -v --cov=app --cov-report=term-missing
+
+test-discovery:
+	docker-compose exec discovery pytest -v --cov=app --cov-report=term-missing
+
+test-pitch:
+	docker-compose exec pitch pytest -v --cov=app --cov-report=term-missing
+
+test-payment:
+	docker-compose exec payment pytest -v --cov=app --cov-report=term-missing
+
+test-ml:
+	docker-compose exec ml pytest -v --cov=app --cov-report=term-missing
 
 # Run linting
 lint:
@@ -65,9 +88,21 @@ clean:
 	docker-compose down -v --remove-orphans
 	docker system prune -f
 
-# Development: run identity service locally (requires local Python env)
+# Development: run services locally (requires local Python env)
 dev-identity:
 	cd services/identity && uvicorn app.main:app --reload --port 8001
+
+dev-discovery:
+	cd services/discovery && uvicorn app.main:app --reload --port 8002
+
+dev-pitch:
+	cd services/pitch && uvicorn app.main:app --reload --port 8003
+
+dev-payment:
+	cd services/payment && uvicorn app.main:app --reload --port 8004
+
+dev-ml:
+	cd services/ml && uvicorn app.main:app --reload --port 8005
 
 # Initialize database (first time setup)
 init-db:

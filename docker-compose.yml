@@ -100,6 +100,107 @@ services:
     networks:
       - newsroom_network
 
+  pitch:
+    build:
+      context: ./services/pitch
+      dockerfile: Dockerfile
+    container_name: elastic_newsroom_pitch
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-newsroom_user}:${POSTGRES_PASSWORD:-changeme_in_production}@postgres:5432/${POSTGRES_DB:-elastic_newsroom}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "${PITCH_SERVICE_PORT:-8003}:8000"
+    volumes:
+      - ./services/pitch/app:/app/app:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - newsroom_network
+
+  payment:
+    build:
+      context: ./services/payment
+      dockerfile: Dockerfile
+    container_name: elastic_newsroom_payment
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-newsroom_user}:${POSTGRES_PASSWORD:-changeme_in_production}@postgres:5432/${POSTGRES_DB:-elastic_newsroom}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-sk_test_placeholder}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-pk_test_placeholder}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-whsec_placeholder}
+      - PLATFORM_FEE_PERCENTAGE=${PLATFORM_FEE_PERCENTAGE:-10.0}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "${PAYMENT_SERVICE_PORT:-8004}:8000"
+    volumes:
+      - ./services/payment/app:/app/app:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - newsroom_network
+
+  ml:
+    build:
+      context: ./services/ml
+      dockerfile: Dockerfile
+    container_name: elastic_newsroom_ml
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-newsroom_user}:${POSTGRES_PASSWORD:-changeme_in_production}@postgres:5432/${POSTGRES_DB:-elastic_newsroom}
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL:-all-MiniLM-L6-v2}
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - DEBUG=${DEBUG:-true}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    ports:
+      - "${ML_SERVICE_PORT:-8005}:8000"
+    volumes:
+      - ./services/ml/app:/app/app:ro
+      - ./shared:/app/shared:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - newsroom_network
+
 volumes:
   postgres_data:
   redis_data:
