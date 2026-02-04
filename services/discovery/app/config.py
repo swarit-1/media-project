@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     # Redis
     redis_url: str = "redis://localhost:6379/0"
 
+    # JWT (for token validation - needed by Squad Builder)
+    jwt_secret_key: str = "your-super-secret-key-change-in-production"
+    jwt_algorithm: str = "HS256"
+
     # Service
     service_name: str = "discovery-service"
     environment: str = "development"

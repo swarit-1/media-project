@@ -50,6 +50,7 @@ db-shell:
 # Run database migrations (all services)
 migrate:
 	docker-compose exec identity alembic upgrade head
+	docker-compose exec discovery alembic upgrade head
 	docker-compose exec pitch alembic upgrade head
 	docker-compose exec payment alembic upgrade head
 	docker-compose exec ml alembic upgrade head

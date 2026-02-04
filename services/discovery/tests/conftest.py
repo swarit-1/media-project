@@ -2,6 +2,7 @@ import asyncio
 from decimal import Decimal
 from typing import AsyncGenerator, Generator
 from uuid import uuid4
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
@@ -18,6 +19,11 @@ from app.services.search_service import FreelancerProfile
 
 # Test database URL
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
+
+# Test user IDs
+FREELANCER_ID = uuid4()
+EDITOR_ID = uuid4()
+NEWSROOM_ID = uuid4()
 
 
 @pytest.fixture(scope="session")
@@ -157,3 +163,64 @@ async def sample_freelancers(db_session: AsyncSession) -> list[FreelancerProfile
 
     await db_session.commit()
     return freelancers
+
+
+def mock_verify_token_freelancer(token, expected_type="access"):
+    """Mock token verification returning a freelancer."""
+    from unittest.mock import MagicMock
+    payload = MagicMock()
+    payload.sub = str(FREELANCER_ID)
+    payload.role = "freelancer"
+    return payload
+
+
+def mock_verify_token_editor(token, expected_type="access"):
+    """Mock token verification returning an editor."""
+    from unittest.mock import MagicMock
+    payload = MagicMock()
+    payload.sub = str(EDITOR_ID)
+    payload.role = "editor"
+    return payload
+
+
+@pytest_asyncio.fixture(scope="function")
+async def freelancer_client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+    """Create async test client authenticated as a freelancer."""
+
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with patch("app.api.deps.verify_token", side_effect=mock_verify_token_freelancer):
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            headers={"Authorization": "Bearer test-freelancer-token"},
+        ) as ac:
+            yield ac
+
+    app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture(scope="function")
+async def editor_client(db_session: AsyncSession) -> AsyncGenerator[AsyncClient, None]:
+    """Create async test client authenticated as an editor."""
+
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    with patch("app.api.deps.verify_token", side_effect=mock_verify_token_editor):
+        async with AsyncClient(
+            transport=ASGITransport(app=app),
+            base_url="http://test",
+            headers={
+                "Authorization": "Bearer test-editor-token",
+                "X-Newsroom-ID": str(NEWSROOM_ID),
+            },
+        ) as ac:
+            yield ac
+
+    app.dependency_overrides.clear()

@@ -10,6 +10,9 @@ from ..logging import get_logger, correlation_id_ctx
 logger = get_logger(__name__)
 
 
+ERROR_DOCS_BASE = "https://docs.elastic-newsroom.io/errors"
+
+
 def create_error_response(
     code: str,
     message: str,
@@ -24,6 +27,7 @@ def create_error_response(
             "details": details or {},
             "request_id": correlation_id_ctx.get(),
             "timestamp": datetime.now(timezone.utc).isoformat(),
+            "documentation_url": f"{ERROR_DOCS_BASE}/{code.lower()}",
         }
     }
 

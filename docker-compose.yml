@@ -78,6 +78,8 @@ services:
     environment:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-newsroom_user}:${POSTGRES_PASSWORD:-changeme_in_production}@postgres:5432/${POSTGRES_DB:-elastic_newsroom}
       - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
+      - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DEBUG=${DEBUG:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -110,6 +112,7 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-super-secret-key-change-in-production}
       - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
+      - CMS_WEBHOOK_SECRET=${CMS_WEBHOOK_SECRET:-disabled}
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - DEBUG=${DEBUG:-true}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}

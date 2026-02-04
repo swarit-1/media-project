@@ -24,6 +24,7 @@ class AssignmentStatus(str, enum.Enum):
     SUBMITTED = "submitted"
     REVISION_REQUESTED = "revision_requested"
     APPROVED = "approved"
+    PUBLISHED = "published"
     KILLED = "killed"
 
 
@@ -84,6 +85,14 @@ class Assignment(Base):
     # Content delivery
     content_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     final_word_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    # CMS integration
+    draft_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    final_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    cms_post_id: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    published_at: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True), nullable=True,
+    )
 
     # Kill fee
     kill_fee_percentage: Mapped[Decimal] = mapped_column(

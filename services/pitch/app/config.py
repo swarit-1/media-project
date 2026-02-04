@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     default_pitch_limit_per_week: int = 5
     default_pitch_window_max: int = 50
 
+    # CMS Webhook
+    cms_webhook_secret: str = "disabled"
+
     # CORS
     cors_origins: str = "http://localhost:3000,http://localhost:8080"
 

@@ -145,7 +145,8 @@ class AssignmentService:
                 AssignmentStatus.SUBMITTED,
                 AssignmentStatus.KILLED,
             ],
-            AssignmentStatus.APPROVED: [],
+            AssignmentStatus.APPROVED: [AssignmentStatus.PUBLISHED],
+            AssignmentStatus.PUBLISHED: [],
             AssignmentStatus.KILLED: [],
         }
 
@@ -171,6 +172,10 @@ class AssignmentService:
                 assignment.revision_notes = data.revision_notes
         elif new_status == AssignmentStatus.APPROVED:
             assignment.completed_at = now
+        elif new_status == AssignmentStatus.PUBLISHED:
+            assignment.published_at = now
+            if data.content_url:
+                assignment.final_url = data.content_url
         elif new_status == AssignmentStatus.KILLED:
             assignment.completed_at = now
 

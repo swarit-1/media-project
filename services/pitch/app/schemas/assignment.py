@@ -33,7 +33,7 @@ class AssignmentStatusUpdate(BaseModel):
 
     status: str = Field(
         ...,
-        pattern="^(in_progress|submitted|revision_requested|approved|killed)$",
+        pattern="^(in_progress|submitted|revision_requested|approved|published|killed)$",
     )
     content_url: Optional[str] = None
     final_word_count: Optional[int] = None
@@ -59,6 +59,10 @@ class AssignmentResponse(BaseModel):
     content_url: Optional[str] = None
     final_word_count: Optional[int] = None
     kill_fee_percentage: Decimal
+    draft_url: Optional[str] = None
+    final_url: Optional[str] = None
+    cms_post_id: Optional[str] = None
+    published_at: Optional[datetime] = None
     started_at: Optional[datetime] = None
     submitted_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
@@ -67,3 +71,23 @@ class AssignmentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CMSWebhookPayload(BaseModel):
+    """Schema for CMS webhook payload."""
+
+    event: str = Field(..., pattern="^(article.published|article.updated|article.unpublished)$")
+    cms_post_id: str
+    assignment_id: UUID
+    published_url: str
+    published_at: Optional[datetime] = None
+    metadata: Optional[dict] = None
+
+
+class CMSWebhookResponse(BaseModel):
+    """Schema for CMS webhook response."""
+
+    status: str
+    assignment_id: UUID
+    assignment_status: str
+    payment_release_triggered: bool = False
