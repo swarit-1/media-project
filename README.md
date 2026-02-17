@@ -1,6 +1,6 @@
-# Elastic Newsroom
+# Elastic
 
-A B2B platform that transforms freelance journalism from an ad-hoc, trust-based process into programmable infrastructure. Elastic Newsroom connects newsrooms with vetted freelance journalists through structured pitch workflows, smart discovery, ML-powered matching, and integrated payments.
+A B2B platform that transforms freelance journalism from an ad-hoc, trust-based process into programmable infrastructure. Elastic connects newsrooms with vetted freelance journalists through structured pitch workflows, smart discovery, ML-powered matching, and integrated payments.
 
 ## Architecture
 
