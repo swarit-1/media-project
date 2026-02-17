@@ -20,6 +20,16 @@ async def lifespan(app: FastAPI):
     """Application lifespan handler."""
     # Startup
     setup_logging(settings.service_name)
+
+    # Auto-create tables in dev mode
+    if settings.debug:
+        from .models import User, FreelancerProfile, EditorProfile  # noqa: F401
+        from .models.newsroom import Newsroom, NewsroomMembership  # noqa: F401
+        from shared.db.session import engine
+        from shared.db.base import Base
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+
     yield
     # Shutdown
 

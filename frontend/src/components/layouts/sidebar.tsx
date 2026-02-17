@@ -78,7 +78,11 @@ export function Sidebar() {
   const navItems = user?.role === "editor" ? editorNav : freelancerNav;
 
   const initials = user
-    ? `${user.first_name?.[0] || ""}${user.last_name?.[0] || ""}`.toUpperCase()
+    ? user.first_name && user.last_name
+      ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+      : user.display_name
+        ? user.display_name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+        : "??"
     : "??";
 
   return (

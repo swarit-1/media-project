@@ -7,7 +7,6 @@ from uuid import UUID
 from sqlalchemy import String, Integer, Boolean, DateTime, Numeric, Text, text, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, ARRAY
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from geoalchemy2 import Geography
 
 import sys
 sys.path.insert(0, "/app")
@@ -50,10 +49,6 @@ class FreelancerProfile(Base):
     home_city: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
     home_state: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     home_country: Mapped[str] = mapped_column(String(50), default="US")
-    geo_point: Mapped[Optional[str]] = mapped_column(
-        Geography(geometry_type="POINT", srid=4326),
-        nullable=True,
-    )
     willing_to_travel_miles: Mapped[int] = mapped_column(Integer, default=50)
 
     # Beats & expertise

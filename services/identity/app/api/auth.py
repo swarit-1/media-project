@@ -18,21 +18,22 @@ from ..services import UserService, AuthService
 router = APIRouter()
 
 
-@router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(
     data: UserCreate,
     db: AsyncSession = Depends(get_db),
-) -> UserResponse:
+) -> TokenResponse:
     """
-    Register a new user account.
+    Register a new user account and return JWT tokens (auto-login).
 
     Creates a new user with either freelancer or editor role.
     """
     user_service = UserService()
+    auth_service = AuthService()
     try:
         user = await user_service.create_user(db, data)
         await db.commit()
-        return UserResponse.model_validate(user)
+        return auth_service._create_tokens(user)
     except ConflictError as e:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

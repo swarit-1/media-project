@@ -5,8 +5,8 @@ export interface User {
   id: string;
   email: string;
   role: UserRole;
-  first_name: string;
-  last_name: string;
+  first_name?: string;
+  last_name?: string;
   display_name: string;
   avatar_url?: string;
   created_at: string;
@@ -28,6 +28,7 @@ export interface RegisterRequest {
   password: string;
   first_name: string;
   last_name: string;
+  display_name: string;
   role: UserRole;
 }
 

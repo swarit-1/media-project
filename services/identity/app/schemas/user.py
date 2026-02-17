@@ -29,6 +29,7 @@ class UserResponse(BaseModel):
     role: str
     status: str
     email_verified: bool
+    display_name: Optional[str] = None
     created_at: datetime
     last_login_at: Optional[datetime] = None
 

@@ -34,11 +34,16 @@ export default function RegisterPage() {
         password: data.password,
         first_name: data.first_name,
         last_name: data.last_name,
+        display_name: `${data.first_name} ${data.last_name}`,
         role: data.role,
       });
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Registration failed");
+      if (err.message === "Failed to fetch" || err.name === "TypeError") {
+        setError("Cannot reach the server. Make sure the backend is running.");
+      } else {
+        setError(err.message || "Registration failed");
+      }
     }
   }
 
