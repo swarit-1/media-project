@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -200,9 +201,10 @@ function formatLocation(profile: FreelancerProfile): string {
 export default function FreelancerProfilePage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const profile = MOCK_FREELANCERS[params.id];
+  const { id } = use(params);
+  const profile = MOCK_FREELANCERS[id];
 
   if (!profile) {
     return (

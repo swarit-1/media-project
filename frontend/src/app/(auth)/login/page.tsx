@@ -42,7 +42,11 @@ export default function LoginPage() {
       await login(data);
       router.push("/dashboard");
     } catch (err: any) {
-      setError(err.message || "Invalid email or password");
+      if (err.message === "Failed to fetch" || err.name === "TypeError") {
+        setError("Cannot reach the server. Make sure the backend is running, or use Dev Login below.");
+      } else {
+        setError(err.message || "Invalid email or password");
+      }
     }
   }
 

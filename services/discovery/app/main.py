@@ -7,6 +7,7 @@ sys.path.insert(0, "/app")
 from shared.logging import setup_logging, CorrelationIdMiddleware
 from shared.errors import register_exception_handlers
 from shared.observability import MetricsMiddleware, get_metrics_router
+from shared.middleware import RateLimitMiddleware
 
 from .config import get_settings
 from .api import api_router
@@ -35,6 +36,12 @@ app = FastAPI(
 # Add middlewares
 app.add_middleware(MetricsMiddleware, service_name=settings.service_name)
 app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(
+    RateLimitMiddleware,
+    rules={
+        "/api/v1/discovery/search": (60, 60),  # 60 searches per minute
+    },
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins.split(","),

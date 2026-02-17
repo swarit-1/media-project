@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { logout, isDevUser, toggleDevRole } from "@/lib/api/auth";
@@ -69,7 +70,10 @@ export function Sidebar() {
     }
   }
 
-  const isDevMode = isDevUser();
+  const [isDevMode, setIsDevMode] = useState(false);
+  useEffect(() => {
+    setIsDevMode(isDevUser());
+  }, [user]);
 
   const navItems = user?.role === "editor" ? editorNav : freelancerNav;
 
