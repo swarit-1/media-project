@@ -18,6 +18,7 @@ export default function SettingsPage() {
           <TabsList className="mb-6">
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="integrations">Integrations</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
@@ -140,6 +141,79 @@ export default function SettingsPage() {
                     Save preferences
                   </button>
                 </div>
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="integrations">
+            <div className="max-w-2xl space-y-6">
+              <div className="rounded-[5px] border border-ink-200 bg-white p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] bg-blue-50">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" fill="#4285F4"/>
+                        <path d="M14 2v6h6" fill="#A1C2FA"/>
+                        <path d="M8 13h8M8 17h5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-ink-950">
+                        Google Docs
+                      </h3>
+                      <p className="mt-1 text-xs text-ink-500">
+                        Connect Google Docs to collaborate on drafts, review
+                        submissions, and share documents with freelancers
+                        directly from the platform.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => alert("Google Docs integration coming soon!")}
+                    className="shrink-0 inline-flex h-9 items-center justify-center rounded-[3px] border border-ink-200 bg-white px-4 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50"
+                  >
+                    Connect
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[5px] border border-ink-200 bg-white p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] bg-purple-50">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none">
+                        <path d="M14.5 2L6 10.5v5L9.5 19l8.5-8.5v-5L14.5 2z" fill="#611F69"/>
+                        <circle cx="12" cy="10.5" r="1.5" fill="white"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold text-ink-950">
+                        Slack
+                      </h3>
+                      <p className="mt-1 text-xs text-ink-500">
+                        Integrate with Slack to receive notifications about
+                        pitch submissions, assignment updates, and payment
+                        status changes in your preferred channels.
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => alert("Slack integration coming soon!")}
+                    className="shrink-0 inline-flex h-9 items-center justify-center rounded-[3px] border border-ink-200 bg-white px-4 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50"
+                  >
+                    Connect
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-[5px] border border-dashed border-ink-200 bg-ink-50 p-6 text-center">
+                <p className="text-sm text-ink-500">
+                  More integrations coming soon
+                </p>
+                <p className="mt-1 text-xs text-ink-400">
+                  CMS, analytics, and payment provider integrations are on the
+                  roadmap.
+                </p>
               </div>
             </div>
           </TabsContent>

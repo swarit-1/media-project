@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Elastic Newsroom",
+  title: "Elastic",
   description: "B2B platform connecting newsrooms with freelance journalists",
 };
 

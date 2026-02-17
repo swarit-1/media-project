@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Send } from "lucide-react";
 import { Header } from "@/components/layouts/header";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,6 +15,9 @@ import {
 } from "@/components/ui/table";
 import { PitchWindowStatusBadge } from "@/components/features/pitches/status-badge";
 import { PitchWindowForm } from "@/components/features/pitches/pitch-window-form";
+import { OpportunityCard } from "@/components/features/discovery/opportunity-card";
+import { SubmitPitchForm } from "@/components/features/pitches/submit-pitch-form";
+import { useAuth } from "@/lib/hooks/use-auth";
 import type { PitchWindow } from "@/types";
 
 // ---------------------------------------------------------------------------
@@ -133,7 +136,7 @@ function formatBudget(min?: number, max?: number) {
 }
 
 // ---------------------------------------------------------------------------
-// Sub-component: window table
+// Sub-component: Editor pitch window table
 // ---------------------------------------------------------------------------
 
 function PitchWindowTable({ windows }: { windows: PitchWindow[] }) {
@@ -152,7 +155,6 @@ function PitchWindowTable({ windows }: { windows: PitchWindow[] }) {
           <TableRow>
             <TableHead className="pl-4">Title</TableHead>
             <TableHead>Beats</TableHead>
-            <TableHead>Pitches</TableHead>
             <TableHead>Budget</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="pr-4">Closes At</TableHead>
@@ -182,9 +184,6 @@ function PitchWindowTable({ windows }: { windows: PitchWindow[] }) {
                 </div>
               </TableCell>
               <TableCell className="text-sm text-ink-700">
-                {pw.current_pitch_count}/{pw.max_pitches}
-              </TableCell>
-              <TableCell className="text-sm text-ink-700">
                 {formatBudget(pw.budget_min, pw.budget_max)}
               </TableCell>
               <TableCell>
@@ -202,10 +201,92 @@ function PitchWindowTable({ windows }: { windows: PitchWindow[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Page
+// Sub-component: Freelancer opportunities view
 // ---------------------------------------------------------------------------
 
-export default function PitchesPage() {
+function FreelancerOpportunities() {
+  const openWindows = mockPitchWindows.filter((w) => w.status === "open");
+  const closedWindows = mockPitchWindows.filter(
+    (w) => w.status === "closed" || w.status === "cancelled"
+  );
+
+  function handleSubmitPitch(windowId: string) {
+    // In a real app this would open the submit form or navigate
+    console.log("Submit pitch for window:", windowId);
+  }
+
+  return (
+    <>
+      <Header title="Opportunities" subtitle="Browse open pitch windows" />
+      <PageWrapper>
+        <Tabs defaultValue="open">
+          <TabsList>
+            <TabsTrigger value="open">
+              Open
+              <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 py-0.5 text-xs text-ink-600">
+                {openWindows.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="closed">
+              Closed
+              <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 py-0.5 text-xs text-ink-600">
+                {closedWindows.length}
+              </span>
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="open" className="mt-4">
+            {openWindows.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {openWindows.map((pw) => (
+                  <OpportunityCard
+                    key={pw.id}
+                    window={pw}
+                    onSubmitPitch={handleSubmitPitch}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[5px] border border-ink-200 bg-white p-10 text-center">
+                <Send className="mx-auto h-10 w-10 text-ink-300" />
+                <p className="mt-3 text-sm font-medium text-ink-700">
+                  No open opportunities
+                </p>
+                <p className="mt-1 text-xs text-ink-400">
+                  Check back soon for new pitch windows from editors.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="closed" className="mt-4">
+            {closedWindows.length > 0 ? (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {closedWindows.map((pw) => (
+                  <OpportunityCard
+                    key={pw.id}
+                    window={pw}
+                    onSubmitPitch={handleSubmitPitch}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-[5px] border border-ink-200 bg-white p-8 text-center">
+                <p className="text-sm text-ink-500">No closed windows.</p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </PageWrapper>
+    </>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Sub-component: Editor inbox view
+// ---------------------------------------------------------------------------
+
+function EditorPitchInbox() {
   const activeWindows = mockPitchWindows.filter((w) => w.status === "open");
   const closedWindows = mockPitchWindows.filter(
     (w) => w.status === "closed" || w.status === "cancelled"
@@ -250,4 +331,19 @@ export default function PitchesPage() {
       </PageWrapper>
     </>
   );
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export default function PitchesPage() {
+  const { user } = useAuth();
+  const isFreelancer = user?.role === "freelancer";
+
+  if (isFreelancer) {
+    return <FreelancerOpportunities />;
+  }
+
+  return <EditorPitchInbox />;
 }

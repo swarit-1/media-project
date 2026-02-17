@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DollarSign, Landmark, Clock } from "lucide-react";
+import { DollarSign, Landmark, Clock, ExternalLink, CreditCard, CheckCircle2 } from "lucide-react";
 import { Header } from "@/components/layouts/header";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -14,6 +14,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { PaymentStatusBadge } from "@/components/features/payments/payment-status-badge";
+import { useAuth } from "@/lib/hooks/use-auth";
 import type { Payment } from "@/types";
 
 // ---------------------------------------------------------------------------
@@ -159,10 +160,85 @@ function formatDate(iso: string): string {
 type TabValue = "all" | "pending" | "escrow" | "completed";
 
 // ---------------------------------------------------------------------------
+// Stripe Connect Banner
+// ---------------------------------------------------------------------------
+
+function StripeConnectBanner({ isEditor }: { isEditor: boolean }) {
+  const [connected, setConnected] = useState(false);
+
+  if (connected) {
+    return (
+      <div className="mb-6 flex items-center justify-between rounded-[5px] border border-green-200 bg-green-50 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[5px] bg-green-100">
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-green-900">
+              Stripe Connected
+            </p>
+            <p className="text-xs text-green-700">
+              {isEditor
+                ? "Your newsroom is connected to Stripe. Payments will be processed automatically."
+                : "Your Stripe account is connected. You'll receive payouts directly to your bank."}
+            </p>
+          </div>
+        </div>
+        <a
+          href="https://dashboard.stripe.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-8 items-center gap-1.5 rounded-[3px] border border-green-300 bg-white px-3 text-xs font-medium text-green-700 transition-colors hover:bg-green-50"
+        >
+          <ExternalLink className="h-3 w-3" />
+          Stripe Dashboard
+        </a>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mb-6 rounded-[5px] border border-ink-200 bg-white p-5">
+      <div className="flex items-start justify-between">
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[5px] bg-[#635BFF]/10">
+            <CreditCard className="h-5 w-5 text-[#635BFF]" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-ink-950">
+              {isEditor ? "Connect Stripe to Pay Freelancers" : "Connect Stripe to Get Paid"}
+            </h3>
+            <p className="mt-1 text-xs text-ink-500 max-w-md">
+              {isEditor
+                ? "Connect your Stripe account to securely manage escrow payments, release funds to freelancers, and track all transactions in one place."
+                : "Set up Stripe Connect to receive payments directly to your bank account when editors release funds for completed assignments."}
+            </p>
+            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-400">
+              <span>Secure payments via Stripe</span>
+              <span>Automatic escrow management</span>
+              <span>Direct bank payouts</span>
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => setConnected(true)}
+          className="shrink-0 inline-flex h-9 items-center gap-1.5 rounded-[3px] bg-[#635BFF] px-4 text-sm font-medium text-white transition-colors hover:bg-[#4B45C6]"
+        >
+          <CreditCard className="h-4 w-4" />
+          Connect Stripe
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function PaymentsPage() {
+  const { user } = useAuth();
+  const isEditor = user?.role === "editor";
   const [tab, setTab] = useState<TabValue>("all");
 
   const totals = useMemo(() => {
@@ -198,6 +274,9 @@ export default function PaymentsPage() {
     <>
       <Header title="Payments" subtitle="Track assignment payments" />
       <PageWrapper>
+        {/* Stripe Connect */}
+        <StripeConnectBanner isEditor={isEditor ?? true} />
+
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-4">
           <SummaryCard

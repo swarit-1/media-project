@@ -1,20 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { CalendarDays, DollarSign, FileText, Users } from "lucide-react";
+import { CalendarDays, DollarSign, Users } from "lucide-react";
 import { Header } from "@/components/layouts/header";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from "@/components/ui/table";
 import { AssignmentStatusBadge } from "@/components/features/assignments/assignment-status-badge";
 import type { Assignment } from "@/types";
+
+// ---------------------------------------------------------------------------
+// Mock data
+// ---------------------------------------------------------------------------
 
 const MOCK_ASSIGNMENTS: (Assignment & {
   pitch_title: string;
@@ -94,7 +89,8 @@ const MOCK_ASSIGNMENTS: (Assignment & {
     status: "revision_requested",
     revision_count: 1,
     max_revisions: 2,
-    revision_notes: "Please strengthen the sourcing in section 3 and add a counter-perspective.",
+    revision_notes:
+      "Please strengthen the sourcing in section 3 and add a counter-perspective.",
     kill_fee_percentage: 25,
     draft_url: "https://docs.example.com/draft-104",
     started_at: "2026-01-15T09:00:00Z",
@@ -151,8 +147,59 @@ const MOCK_ASSIGNMENTS: (Assignment & {
   },
 ];
 
-const ACTIVE_STATUSES = ["assigned", "in_progress", "submitted", "revision_requested"];
-const COMPLETED_STATUSES = ["approved", "published", "killed"];
+// ---------------------------------------------------------------------------
+// Kanban configuration
+// ---------------------------------------------------------------------------
+
+interface KanbanColumn {
+  key: string;
+  label: string;
+  statuses: string[];
+  headerColor: string;
+}
+
+const KANBAN_COLUMNS: KanbanColumn[] = [
+  {
+    key: "assigned",
+    label: "Assigned",
+    statuses: ["assigned"],
+    headerColor: "bg-ink-200 text-ink-700",
+  },
+  {
+    key: "in_progress",
+    label: "In Progress",
+    statuses: ["in_progress"],
+    headerColor: "bg-blue-100 text-blue-700",
+  },
+  {
+    key: "submitted",
+    label: "Submitted",
+    statuses: ["submitted"],
+    headerColor: "bg-amber-100 text-amber-700",
+  },
+  {
+    key: "revision",
+    label: "Revision Requested",
+    statuses: ["revision_requested"],
+    headerColor: "bg-orange-100 text-orange-700",
+  },
+  {
+    key: "approved",
+    label: "Approved",
+    statuses: ["approved", "published"],
+    headerColor: "bg-green-100 text-green-700",
+  },
+  {
+    key: "killed",
+    label: "Killed",
+    statuses: ["killed"],
+    headerColor: "bg-red-100 text-red-700",
+  },
+];
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function formatRate(rate: number, rateType: string): string {
   if (rateType === "per_word") {
@@ -162,160 +209,128 @@ function formatRate(rate: number, rateType: string): string {
 }
 
 function formatDeadline(deadline: string): string {
-  const date = new Date(deadline);
-  return date.toLocaleDateString("en-US", {
+  return new Date(deadline).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
   });
 }
 
 function isOverdue(deadline: string, status: string): boolean {
-  if (COMPLETED_STATUSES.includes(status)) return false;
+  const completedStatuses = ["approved", "published", "killed"];
+  if (completedStatuses.includes(status)) return false;
   return new Date(deadline) < new Date();
 }
 
-function AssignmentsTable({
-  assignments,
-}: {
-  assignments: typeof MOCK_ASSIGNMENTS;
-}) {
-  const router = useRouter();
+// ---------------------------------------------------------------------------
+// Kanban Card
+// ---------------------------------------------------------------------------
 
-  if (assignments.length === 0) {
-    return (
-      <div className="rounded-[5px] border border-ink-200 bg-white p-10 text-center">
-        <FileText className="mx-auto h-10 w-10 text-ink-300" />
-        <p className="mt-3 text-sm font-medium text-ink-700">
-          No assignments found
-        </p>
-        <p className="mt-1 text-xs text-ink-400">
-          Assignments will appear here once pitches are accepted and assigned.
-        </p>
-      </div>
-    );
-  }
+function KanbanCard({
+  assignment,
+  onClick,
+}: {
+  assignment: (typeof MOCK_ASSIGNMENTS)[0];
+  onClick: () => void;
+}) {
+  const overdue = isOverdue(assignment.deadline, assignment.status);
 
   return (
-    <div className="rounded-[5px] border border-ink-200 bg-white">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="pl-4">Title</TableHead>
-            <TableHead>Freelancer</TableHead>
-            <TableHead>Rate</TableHead>
-            <TableHead>Deadline</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="pr-4">Revisions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {assignments.map((assignment) => (
-            <TableRow
-              key={assignment.id}
-              className="cursor-pointer"
-              onClick={() => router.push(`/assignments/${assignment.id}`)}
-            >
-              <TableCell className="pl-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 shrink-0 text-ink-400" />
-                  <span className="text-sm font-medium text-ink-900">
-                    {assignment.pitch_title}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <Users className="h-3.5 w-3.5 text-ink-400" />
-                  <span className="text-sm text-ink-700">
-                    {assignment.freelancer_name}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1.5">
-                  <DollarSign className="h-3.5 w-3.5 text-ink-400" />
-                  <span className="text-sm text-ink-700">
-                    {formatRate(assignment.agreed_rate, assignment.rate_type)}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1.5">
-                  <CalendarDays className="h-3.5 w-3.5 text-ink-400" />
-                  <span
-                    className={`text-sm ${
-                      isOverdue(assignment.deadline, assignment.status)
-                        ? "font-medium text-red-600"
-                        : "text-ink-700"
-                    }`}
-                  >
-                    {formatDeadline(assignment.deadline)}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell>
-                <AssignmentStatusBadge status={assignment.status} />
-              </TableCell>
-              <TableCell className="pr-4">
-                <span className="text-sm text-ink-700">
-                  {assignment.revision_count}/{assignment.max_revisions}
-                </span>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <button
+      onClick={onClick}
+      className="w-full rounded-[5px] border border-ink-200 bg-white p-3 text-left transition-shadow hover:shadow-sm"
+    >
+      <p className="text-sm font-medium text-ink-950 leading-snug">
+        {assignment.pitch_title}
+      </p>
+
+      <div className="mt-2 flex items-center gap-1.5">
+        <Users className="h-3 w-3 text-ink-400" />
+        <span className="text-xs text-ink-600">{assignment.freelancer_name}</span>
+      </div>
+
+      <div className="mt-2 flex items-center justify-between">
+        <div className="flex items-center gap-1">
+          <DollarSign className="h-3 w-3 text-ink-400" />
+          <span className="text-xs text-ink-600">
+            {formatRate(assignment.agreed_rate, assignment.rate_type)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <CalendarDays className="h-3 w-3 text-ink-400" />
+          <span
+            className={`text-xs ${
+              overdue ? "font-medium text-red-600" : "text-ink-600"
+            }`}
+          >
+            {formatDeadline(assignment.deadline)}
+          </span>
+        </div>
+      </div>
+
+      {assignment.revision_count > 0 && (
+        <p className="mt-2 text-xs text-ink-400">
+          Revisions: {assignment.revision_count}/{assignment.max_revisions}
+        </p>
+      )}
+    </button>
   );
 }
 
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
 export default function AssignmentsPage() {
-  const activeAssignments = MOCK_ASSIGNMENTS.filter((a) =>
-    ACTIVE_STATUSES.includes(a.status)
-  );
-  const completedAssignments = MOCK_ASSIGNMENTS.filter((a) =>
-    COMPLETED_STATUSES.includes(a.status)
-  );
+  const router = useRouter();
 
   return (
     <>
       <Header title="Assignments" subtitle="Manage editorial assignments" />
       <PageWrapper>
-        <Tabs defaultValue="active">
-          <TabsList>
-            <TabsTrigger value="active">
-              Active
-              <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 py-0.5 text-xs text-ink-600">
-                {activeAssignments.length}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="completed">
-              Completed
-              <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 py-0.5 text-xs text-ink-600">
-                {completedAssignments.length}
-              </span>
-            </TabsTrigger>
-            <TabsTrigger value="all">
-              All
-              <span className="ml-1.5 rounded-full bg-ink-100 px-1.5 py-0.5 text-xs text-ink-600">
-                {MOCK_ASSIGNMENTS.length}
-              </span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="grid grid-cols-2 gap-4 xl:grid-cols-3">
+          {KANBAN_COLUMNS.map((column) => {
+            const columnAssignments = MOCK_ASSIGNMENTS.filter((a) =>
+              column.statuses.includes(a.status)
+            );
 
-          <TabsContent value="active" className="mt-4">
-            <AssignmentsTable assignments={activeAssignments} />
-          </TabsContent>
+            return (
+              <div
+                key={column.key}
+                className="flex flex-col"
+              >
+                {/* Column header */}
+                <div
+                  className={`flex items-center justify-between rounded-t-[5px] px-3 py-2 ${column.headerColor}`}
+                >
+                  <span className="text-xs font-semibold">{column.label}</span>
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-white/60 px-1.5 text-[11px] font-medium">
+                    {columnAssignments.length}
+                  </span>
+                </div>
 
-          <TabsContent value="completed" className="mt-4">
-            <AssignmentsTable assignments={completedAssignments} />
-          </TabsContent>
-
-          <TabsContent value="all" className="mt-4">
-            <AssignmentsTable assignments={MOCK_ASSIGNMENTS} />
-          </TabsContent>
-        </Tabs>
+                {/* Column body */}
+                <div className="flex flex-1 flex-col gap-2 rounded-b-[5px] border border-t-0 border-ink-200 bg-ink-50 p-2 min-h-[200px]">
+                  {columnAssignments.length > 0 ? (
+                    columnAssignments.map((assignment) => (
+                      <KanbanCard
+                        key={assignment.id}
+                        assignment={assignment}
+                        onClick={() =>
+                          router.push(`/assignments/${assignment.id}`)
+                        }
+                      />
+                    ))
+                  ) : (
+                    <div className="flex flex-1 items-center justify-center">
+                      <p className="text-xs text-ink-400">No assignments</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </PageWrapper>
     </>
   );

@@ -46,13 +46,13 @@ export default function RegisterPage() {
     <div>
       <div className="mb-8 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-[5px] bg-ink-950 text-white">
-          <span className="text-xs font-bold">EN</span>
+          <span className="text-xs font-bold">E</span>
         </div>
       </div>
 
       <h1 className="text-xl font-semibold text-ink-950">Create your account</h1>
       <p className="mt-1 text-sm text-ink-500">
-        Join the Elastic Newsroom platform
+        Join the Elastic platform
       </p>
 
       {error && (

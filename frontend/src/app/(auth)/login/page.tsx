@@ -7,12 +7,26 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Eye, EyeOff } from "lucide-react";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
-import { login } from "@/lib/api/auth";
+import { login, devLogin } from "@/lib/api/auth";
 
 export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDevLogin, setShowDevLogin] = useState(false);
+  const [devPassword, setDevPassword] = useState("");
+  const [devError, setDevError] = useState<string | null>(null);
+  const [devRole, setDevRole] = useState<"editor" | "freelancer">("editor");
+
+  function handleDevLogin(role?: "editor" | "freelancer") {
+    setDevError(null);
+    const selectedRole = role ?? devRole;
+    if (devLogin(devPassword, selectedRole)) {
+      router.push("/dashboard");
+    } else {
+      setDevError("Invalid dev password");
+    }
+  }
 
   const {
     register,
@@ -26,7 +40,7 @@ export default function LoginPage() {
     setError(null);
     try {
       await login(data);
-      router.push("/");
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message || "Invalid email or password");
     }
@@ -37,13 +51,13 @@ export default function LoginPage() {
       {/* Logo */}
       <div className="mb-8 flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-[5px] bg-ink-950 text-white">
-          <span className="text-xs font-bold">EN</span>
+          <span className="text-xs font-bold">E</span>
         </div>
       </div>
 
       <h1 className="text-xl font-semibold text-ink-950">Welcome back</h1>
       <p className="mt-1 text-sm text-ink-500">
-        Sign in to your Elastic Newsroom account
+        Sign in to your Elastic account
       </p>
 
       {error && (
@@ -128,6 +142,60 @@ export default function LoginPage() {
           Sign up
         </Link>
       </p>
+
+      {/* Dev Skip Login */}
+      <div className="mt-6 border-t border-ink-200 pt-6">
+        {!showDevLogin ? (
+          <button
+            type="button"
+            onClick={() => setShowDevLogin(true)}
+            className="flex h-9 w-full items-center justify-center rounded-[3px] border border-dashed border-ink-300 px-4 text-sm text-ink-500 transition-colors hover:border-ink-400 hover:text-ink-600"
+          >
+            Skip Login (Dev)
+          </button>
+        ) : (
+          <div className="space-y-3">
+            <input
+              type="password"
+              value={devPassword}
+              onChange={(e) => setDevPassword(e.target.value)}
+              placeholder="Enter dev password"
+              className="flex h-9 w-full rounded-[3px] border border-ink-200 bg-white px-3 text-sm text-ink-900 placeholder:text-ink-400 focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/20"
+              onKeyDown={(e) => e.key === "Enter" && handleDevLogin()}
+            />
+            {devError && (
+              <p className="text-xs text-danger-600">{devError}</p>
+            )}
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDevLogin(false);
+                  setDevPassword("");
+                  setDevError(null);
+                }}
+                className="flex h-9 flex-1 items-center justify-center rounded-[3px] border border-ink-200 px-4 text-sm text-ink-600 transition-colors hover:bg-ink-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDevLogin("editor")}
+                className="flex h-9 flex-1 items-center justify-center rounded-[3px] bg-ink-700 px-4 text-sm font-medium text-white transition-colors hover:bg-ink-600"
+              >
+                Editor
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDevLogin("freelancer")}
+                className="flex h-9 flex-1 items-center justify-center rounded-[3px] bg-amber-600 px-4 text-sm font-medium text-white transition-colors hover:bg-amber-500"
+              >
+                Journalist
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

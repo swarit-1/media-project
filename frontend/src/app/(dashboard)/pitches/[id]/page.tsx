@@ -1,7 +1,16 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, DollarSign, Users, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  DollarSign,
+  FileText,
+  Check,
+  X,
+  Eye,
+} from "lucide-react";
 import { Header } from "@/components/layouts/header";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
 import {
@@ -43,7 +52,7 @@ const mockWindow: PitchWindow = {
   created_at: "2026-01-20T10:00:00Z",
 };
 
-const mockPitches: Pitch[] = [
+const initialPitches: Pitch[] = [
   {
     id: "p-1",
     pitch_window_id: "pw-1",
@@ -89,7 +98,8 @@ const mockPitches: Pitch[] = [
     proposed_rate_type: "flat_rate",
     estimated_delivery_days: 18,
     status: "accepted",
-    editor_notes: "Strong angle. Let us discuss timing for a summer feature slot.",
+    editor_notes:
+      "Strong angle. Let us discuss timing for a summer feature slot.",
     submitted_at: "2026-02-02T08:10:00Z",
     reviewed_at: "2026-02-07T15:00:00Z",
     created_at: "2026-02-01T20:00:00Z",
@@ -113,10 +123,6 @@ const mockPitches: Pitch[] = [
     created_at: "2026-02-04T12:00:00Z",
   },
 ];
-
-// ---------------------------------------------------------------------------
-// Mock freelancer names (in a real app, fetched from user service)
-// ---------------------------------------------------------------------------
 
 const freelancerNames: Record<string, string> = {
   "fl-1": "Maria Santos",
@@ -159,7 +165,58 @@ function formatRateType(type: string) {
 
 export default function PitchWindowDetailPage() {
   const pw = mockWindow;
-  const pitches = mockPitches;
+  const [pitches, setPitches] = useState<Pitch[]>(initialPitches);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+
+  function handleAccept(pitchId: string) {
+    setPitches((prev) =>
+      prev.map((p) =>
+        p.id === pitchId
+          ? {
+              ...p,
+              status: "accepted" as const,
+              reviewed_at: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+  }
+
+  function handleReview(pitchId: string) {
+    setPitches((prev) =>
+      prev.map((p) =>
+        p.id === pitchId
+          ? {
+              ...p,
+              status: "under_review" as const,
+              reviewed_at: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+  }
+
+  function handleReject(pitchId: string) {
+    setPitches((prev) =>
+      prev.map((p) =>
+        p.id === pitchId
+          ? {
+              ...p,
+              status: "rejected" as const,
+              rejection_reason: rejectionReason || undefined,
+              reviewed_at: new Date().toISOString(),
+            }
+          : p
+      )
+    );
+    setRejectingId(null);
+    setRejectionReason("");
+  }
+
+  function canTakeAction(status: string) {
+    return status === "submitted" || status === "under_review";
+  }
 
   return (
     <>
@@ -193,8 +250,7 @@ export default function PitchWindowDetailPage() {
             </div>
           )}
 
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {/* Beats */}
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div className="flex items-start gap-2">
               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
               <div>
@@ -212,7 +268,6 @@ export default function PitchWindowDetailPage() {
               </div>
             </div>
 
-            {/* Budget */}
             <div className="flex items-start gap-2">
               <DollarSign className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
               <div>
@@ -226,18 +281,6 @@ export default function PitchWindowDetailPage() {
               </div>
             </div>
 
-            {/* Pitches received */}
-            <div className="flex items-start gap-2">
-              <Users className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
-              <div>
-                <p className="text-xs font-medium text-ink-500">Pitches</p>
-                <p className="mt-1 text-sm text-ink-700">
-                  {pw.current_pitch_count} / {pw.max_pitches}
-                </p>
-              </div>
-            </div>
-
-            {/* Deadline */}
             <div className="flex items-start gap-2">
               <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-ink-400" />
               <div>
@@ -267,7 +310,8 @@ export default function PitchWindowDetailPage() {
                   <TableHead>Rate</TableHead>
                   <TableHead>Word Count</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="pr-4">Submitted</TableHead>
+                  <TableHead>Submitted</TableHead>
+                  <TableHead className="pr-4">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -298,10 +342,52 @@ export default function PitchWindowDetailPage() {
                     <TableCell>
                       <PitchStatusBadge status={pitch.status} />
                     </TableCell>
-                    <TableCell className="pr-4 text-sm text-ink-500">
+                    <TableCell className="text-sm text-ink-500">
                       {pitch.submitted_at
                         ? formatDate(pitch.submitted_at)
                         : "-"}
+                    </TableCell>
+                    <TableCell className="pr-4">
+                      {canTakeAction(pitch.status) ? (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => handleAccept(pitch.id)}
+                            className="inline-flex h-7 items-center gap-1 rounded-[3px] bg-green-600 px-2 text-xs font-medium text-white transition-colors hover:bg-green-700"
+                            title="Accept pitch"
+                          >
+                            <Check className="h-3 w-3" />
+                            Accept
+                          </button>
+                          {pitch.status === "submitted" && (
+                            <button
+                              onClick={() => handleReview(pitch.id)}
+                              className="inline-flex h-7 items-center gap-1 rounded-[3px] border border-ink-200 bg-white px-2 text-xs font-medium text-ink-700 transition-colors hover:bg-ink-50"
+                              title="Mark as under review"
+                            >
+                              <Eye className="h-3 w-3" />
+                              Review
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setRejectingId(pitch.id)}
+                            className="inline-flex h-7 items-center gap-1 rounded-[3px] border border-red-200 bg-white px-2 text-xs font-medium text-red-600 transition-colors hover:bg-red-50"
+                            title="Reject pitch"
+                          >
+                            <X className="h-3 w-3" />
+                            Reject
+                          </button>
+                        </div>
+                      ) : pitch.status === "accepted" ? (
+                        <span className="text-xs text-green-600 font-medium">
+                          Accepted
+                        </span>
+                      ) : pitch.status === "rejected" ? (
+                        <span className="text-xs text-red-600 font-medium">
+                          Rejected
+                        </span>
+                      ) : (
+                        <span className="text-xs text-ink-400">-</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -309,6 +395,44 @@ export default function PitchWindowDetailPage() {
             </Table>
           </div>
         </div>
+
+        {/* Rejection reason modal */}
+        {rejectingId && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="w-full max-w-md rounded-[5px] border border-ink-200 bg-white p-5 shadow-lg">
+              <h3 className="text-sm font-semibold text-ink-950">
+                Reject Pitch
+              </h3>
+              <p className="mt-1 text-xs text-ink-500">
+                Optionally provide a reason for the rejection.
+              </p>
+              <textarea
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Reason for rejection (optional)"
+                className="mt-3 w-full rounded-[3px] border border-ink-200 bg-white px-3 py-2 text-sm text-ink-900 placeholder:text-ink-400 focus:border-accent-500 focus:outline-none focus:ring-2 focus:ring-accent-500/20"
+                rows={3}
+              />
+              <div className="mt-4 flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setRejectingId(null);
+                    setRejectionReason("");
+                  }}
+                  className="inline-flex h-9 items-center justify-center rounded-[3px] border border-ink-200 bg-white px-4 text-sm font-medium text-ink-700 transition-colors hover:bg-ink-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleReject(rejectingId)}
+                  className="inline-flex h-9 items-center justify-center rounded-[3px] bg-red-600 px-4 text-sm font-medium text-white transition-colors hover:bg-red-700"
+                >
+                  Reject Pitch
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </PageWrapper>
     </>
   );

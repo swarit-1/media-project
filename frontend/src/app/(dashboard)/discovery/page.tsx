@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Header } from "@/components/layouts/header";
 import { PageWrapper } from "@/components/layouts/page-wrapper";
@@ -141,6 +142,7 @@ const MOCK_FREELANCERS: FreelancerProfile[] = [
 const PER_PAGE = 6;
 
 export default function DiscoveryPage() {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [beat, setBeat] = useState("all");
   const [availability, setAvailability] = useState("all");
@@ -210,8 +212,7 @@ export default function DiscoveryPage() {
   );
 
   function handleViewProfile(id: string) {
-    // Placeholder: will navigate to freelancer profile page
-    console.log("View profile:", id);
+    router.push(`/discovery/${id}`);
   }
 
   return (

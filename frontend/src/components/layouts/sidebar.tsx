@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { logout, isDevUser, toggleDevRole } from "@/lib/api/auth";
 import {
   LayoutDashboard,
   Search,
@@ -12,6 +13,8 @@ import {
   Settings,
   FolderOpen,
   LogOut,
+  ArrowLeftRight,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/hooks/use-auth";
@@ -25,19 +28,21 @@ interface NavItem {
 }
 
 const editorNav: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Discovery", href: "/discovery", icon: Search },
   { label: "Pitch Inbox", href: "/pitches", icon: Inbox },
   { label: "Assignments", href: "/assignments", icon: FileText },
+  { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Squads", href: "/squads", icon: Users },
   { label: "Payments", href: "/payments", icon: CreditCard },
 ];
 
 const freelancerNav: NavItem[] = [
-  { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Opportunities", href: "/discovery", icon: Search },
   { label: "My Pitches", href: "/pitches", icon: Inbox },
   { label: "Assignments", href: "/assignments", icon: FileText },
+  { label: "Messages", href: "/messages", icon: MessageSquare },
   { label: "Portfolio", href: "/portfolio", icon: FolderOpen },
   { label: "Payments", href: "/payments", icon: CreditCard },
 ];
@@ -48,7 +53,23 @@ const settingsNav: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, reset, setUser } = useAuth();
+
+  function handleLogout() {
+    logout();
+    reset();
+    router.push("/login");
+  }
+
+  function handleToggleRole() {
+    const updatedUser = toggleDevRole();
+    if (updatedUser) {
+      setUser(updatedUser);
+    }
+  }
+
+  const isDevMode = isDevUser();
 
   const navItems = user?.role === "editor" ? editorNav : freelancerNav;
 
@@ -60,12 +81,12 @@ export function Sidebar() {
     <aside className="fixed left-0 top-0 z-40 flex h-screen w-[280px] flex-col bg-ink-900">
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-ink-800 px-5">
-        <Link href="/" className="flex items-center gap-2">
+        <Link href="/dashboard" className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-[5px] bg-white text-ink-900">
-            <span className="text-xs font-bold">EN</span>
+            <span className="text-xs font-bold">E</span>
           </div>
           <span className="text-sm font-semibold text-white">
-            Elastic Newsroom
+            Elastic
           </span>
         </Link>
       </div>
@@ -128,6 +149,22 @@ export function Sidebar() {
         </div>
       </nav>
 
+      {/* Dev Mode Toggle */}
+      {isDevMode && (
+        <div className="border-t border-ink-800 px-4 py-3">
+          <button
+            onClick={handleToggleRole}
+            className="flex w-full items-center justify-between rounded-[5px] bg-ink-800 px-3 py-2 text-xs transition-colors hover:bg-ink-700"
+          >
+            <span className="text-ink-400">Dev Mode</span>
+            <span className="flex items-center gap-1.5 font-medium text-amber-400">
+              <ArrowLeftRight className="h-3 w-3" />
+              {user?.role === "editor" ? "Editor" : "Journalist"}
+            </span>
+          </button>
+        </div>
+      )}
+
       {/* User Section */}
       <div className="border-t border-ink-800 p-4">
         <div className="flex items-center gap-3">
@@ -143,6 +180,7 @@ export function Sidebar() {
             </p>
           </div>
           <button
+            onClick={handleLogout}
             className="shrink-0 rounded-[3px] p-1.5 text-ink-500 transition-colors hover:bg-ink-800 hover:text-ink-300"
             title="Sign out"
           >

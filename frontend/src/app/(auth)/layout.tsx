@@ -13,7 +13,7 @@ export default function AuthLayout({
       <div className="hidden w-1/2 bg-ink-900 lg:flex lg:flex-col lg:items-center lg:justify-center lg:px-12">
         <div className="max-w-md text-center">
           <div className="mx-auto mb-8 flex h-12 w-12 items-center justify-center rounded-lg bg-white">
-            <span className="text-lg font-bold text-ink-900">EN</span>
+            <span className="text-lg font-bold text-ink-900">E</span>
           </div>
           <h2 className="text-2xl font-semibold text-white">
             The platform for modern newsrooms
@@ -25,7 +25,7 @@ export default function AuthLayout({
           </p>
           <div className="mt-10 border-t border-ink-800 pt-8">
             <blockquote className="text-sm italic text-ink-400">
-              &ldquo;Elastic Newsroom transformed how we work with freelancers.
+              &ldquo;Elastic transformed how we work with freelancers.
               Our editorial team is more efficient and our coverage has never
               been better.&rdquo;
             </blockquote>

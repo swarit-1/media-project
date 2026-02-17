@@ -4,7 +4,7 @@ import { PageWrapper } from "@/components/layouts/page-wrapper";
 export default function DashboardPage() {
   return (
     <>
-      <Header title="Dashboard" subtitle="Welcome to Elastic Newsroom" />
+      <Header title="Dashboard" subtitle="Welcome to Elastic" />
       <PageWrapper>
         <div className="grid grid-cols-4 gap-4">
           {[
